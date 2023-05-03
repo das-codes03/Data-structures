@@ -1,17 +1,23 @@
 #include <iostream>
 using namespace std;
-
 struct node
 {
     int data;
     node *next;
-    node(int data = 0, node *next = NULL) : data(data), next(next) {}
+    node *prev;
+    node(int data = 0, node *prev = NULL, node *next = NULL) : data(data), next(next), prev(prev)
+    {
+        if (prev)
+            prev->next = this;
+        if (next)
+            next->prev = this;
+    }
 };
 node *insertAt(node *at, int data = 0)
 {
     if (at == NULL)
         throw runtime_error("NULL node exception");
-    at->next = new node(data, at->next);
+    at->next = new node(data, at, at->next);
     return at->next;
 }
 node *create()
@@ -38,7 +44,7 @@ node *create()
 
 node *insertBeginning(node *head, int data)
 {
-    return new node(data, head);
+    return new node(data, head->prev, head);
 }
 
 node *insertEnd(node *head, int data)
@@ -106,6 +112,7 @@ node *deleteBeginning(node *head)
         throw runtime_error("Head cannot be NULL");
     // get next node
     node *newHead = head->next;
+    newHead->prev = NULL;
     delete (head);
     return newHead;
 }
@@ -125,25 +132,21 @@ node *deleteAtPosition(node *head, int position)
     }
     node *toDel = curr->next;
     curr->next = curr->next->next;
+    curr->next->prev = curr;
     delete (toDel);
     return head;
 }
-// a<-b c->d
 
-//
 node *reverse(node *head)
 {
-    node *curr = head;
     node *next = NULL;
-    node *prev = NULL;
-    while (curr)
+    while (head)
     {
-        next = curr->next;
-        curr->next = prev;
-        prev = curr;
-        curr = next;
-        if (!curr)
-            return prev;
+        next = head->next;
+        swap(head->next, head->prev);
+        if (!next)
+            return head;
+        head = next;
     }
 }
 
@@ -158,6 +161,8 @@ node *concatenate(node *head1, node *head2)
         curr = curr->next;
     }
     curr->next = head2;
+    if (head2)
+        head2->prev = curr;
     return head1;
 }
 
@@ -179,7 +184,7 @@ int main()
     node *head = NULL;
     while (fn)
     {
-        cout << "1. Create linked list" << endl;
+        cout << "1. Create doubly linked list" << endl;
         cout << "2. Insert element at beginning." << endl;
         cout << "3. Insert element at position." << endl;
         cout << "4. Insert element at end." << endl;
@@ -191,49 +196,55 @@ int main()
         cout << "0. Exit" << endl;
         cout << "What do you want to do?" << endl;
         cin >> fn;
-
-        switch (fn)
+        try
         {
-        case 1:
-            head = create();
-            break;
-        case 2:
-            cout << "Enter data to insert at beginning: ";
-            cin >> data;
-            head = insertBeginning(head, data);
-            break;
-        case 3:
-            cout << "Enter data to insert at position: ";
-            cin >> data;
-            cout << "Enter position to insert: ";
-            cin >> pos;
-            head = insertAtPosition(head, pos, data);
-            break;
-        case 4:
-            cout << "Enter data to insert at end: ";
-            cin >> data;
-            head = insertEnd(head, data);
-            break;
-        case 5:
-            head = deleteBeginning(head);
-            break;
-        case 6:
-            cout << "Enter position to delete: ";
-            cin >> pos;
-            head = deleteAtPosition(head, pos);
-            break;
-        case 7:
-            head = deleteEnd(head);
-            break;
-        case 8:
-            head = reverse(head);
-            break;
-        case 9:
-            cout << "First Create a linked list to concatenate: " << endl;
-            head = concatenate(head, create());
-            break;
-        default:
-            break;
+            switch (fn)
+            {
+            case 1:
+                head = create();
+                break;
+            case 2:
+                cout << "Enter data to insert at beginning: ";
+                cin >> data;
+                head = insertBeginning(head, data);
+                break;
+            case 3:
+                cout << "Enter data to insert at position: ";
+                cin >> data;
+                cout << "Enter position to insert: ";
+                cin >> pos;
+                head = insertAtPosition(head, pos, data);
+                break;
+            case 4:
+                cout << "Enter data to insert at end: ";
+                cin >> data;
+                head = insertEnd(head, data);
+                break;
+            case 5:
+                head = deleteBeginning(head);
+                break;
+            case 6:
+                cout << "Enter position to delete: ";
+                cin >> pos;
+                head = deleteAtPosition(head, pos);
+                break;
+            case 7:
+                head = deleteEnd(head);
+                break;
+            case 8:
+                head = reverse(head);
+                break;
+            case 9:
+                cout << "First Create a linked list to concatenate: " << endl;
+                head = concatenate(head, create());
+                break;
+            default:
+                break;
+            }
+        }
+        catch (runtime_error e)
+        {
+            cerr << e.what() << endl;
         }
         displayList(head);
     }
